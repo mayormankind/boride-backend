@@ -135,7 +135,7 @@ export async function getAvailableRides(req, res) {
   try {
     // Get pending rides
     const rides = await Ride.find({ status: "pending" })
-      .populate("student", "fullName", "phoneNo")
+      .populate("student", "fullName phoneNo")
       .sort({ createdAt: -1 })
       .limit(20);
 
