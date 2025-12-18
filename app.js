@@ -1,6 +1,4 @@
-//server.js
 import express from "express";
-import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
@@ -17,7 +15,6 @@ const __dirname = path.dirname(__filename);
 
 // started the express app
 const app = express();
-const PORT = process.env.DEV_PORT || 5000;
 
 // Configure view engine for emails
 app.set("view engine", "ejs");
@@ -44,7 +41,4 @@ app.get("/", (req, res) => {
   });
 });
 
-// app listening to requests
-app.listen(PORT, () => {
-  console.log(`🚀 BoRide Server online @ port -> ${PORT}`);
-});
+export default app;
