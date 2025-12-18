@@ -1,4 +1,5 @@
 import express from "express";
+import dotenv from "dotenv";
 import cors from "cors";
 import helmet from "helmet";
 import path from "path";
@@ -7,8 +8,6 @@ import studentRoutes from "./routes/studentRoutes.js";
 import driverRoutes from "./routes/driverRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan"
-
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
