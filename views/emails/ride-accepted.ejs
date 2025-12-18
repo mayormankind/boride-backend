@@ -1,0 +1,41 @@
+<%- include('layout/header') %>
+
+<h2 style="color: #212529; font-size: 24px; margin-bottom: 15px;">Your Ride Has Been Accepted! 🚗</h2>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+    Great news, <strong><%= studentName %></strong>! A driver has accepted your ride request.
+</p>
+
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+    <h3 style="color: #ffffff; font-size: 18px; margin-bottom: 15px;">Driver Information</h3>
+    
+    <p style="color: #e0e7ff; font-size: 14px; margin-bottom: 10px;">
+        <strong>Name:</strong> <%= driverName %>
+    </p>
+    <p style="color: #e0e7ff; font-size: 14px; margin-bottom: 10px;">
+        <strong>Phone:</strong> <%= driverPhone %>
+    </p>
+    <p style="color: #e0e7ff; font-size: 14px; margin-bottom: 10px;">
+        <strong>Vehicle:</strong> <%= vehicleInfo %>
+    </p>
+</div>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+    <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Ride Details</h3>
+    
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Booking ID:</strong> #<%= rideId %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Pickup Location:</strong> <%= pickupLocation %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Estimated Arrival:</strong> <%= estimatedArrival %> mins
+    </p>
+</div>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6;">
+    Your driver is on the way! Please be ready at your pickup location.
+</p>
+
+<%- include('layout/footer') %>

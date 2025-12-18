@@ -1,0 +1,28 @@
+<%- include('layout/header') %>
+
+<h2 style="color: #212529; font-size: 24px; margin-bottom: 15px;">Hello, <%= fullName %>!</h2>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+    We detected a new login to your BoRide account.
+</p>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-left: 4px solid #667eea; border-radius: 4px; margin-bottom: 25px;">
+    <p style="color: #495057; font-size: 14px; margin-bottom: 8px;">
+        <strong>Login Time:</strong> <%= loginTime %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 8px;">
+        <strong>Account Type:</strong> <%= userType %>
+    </p>
+</div>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">
+    If this was you, you can safely ignore this email.
+</p>
+
+<div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 6px; padding: 15px; margin-bottom: 20px;">
+    <p style="color: #856404; font-size: 14px; line-height: 1.6; margin: 0;">
+        ⚠️ <strong>Security Alert:</strong> If you did not initiate this login, please change your password immediately and contact our support team.
+    </p>
+</div>
+
+<%- include('layout/footer') %>

@@ -1,0 +1,28 @@
+{
+  "name": "boride-v3-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "local": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "ejs": "^3.1.9",
+    "express": "^5.1.0",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.20.0",
+    "morgan": "^1.10.1",
+    "nodemailer": "^7.0.11",
+    "nodemon": "^3.1.11"
+  }
+}

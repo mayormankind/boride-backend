@@ -1,0 +1,38 @@
+<%- include('layout/header') %>
+
+<h2 style="color: #212529; font-size: 24px; margin-bottom: 15px;">Ride Completed Successfully! ✅</h2>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+    Thank you for riding with BoRide, <strong><%= studentName %></strong>!
+</p>
+
+<div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin-bottom: 25px;">
+    <h3 style="color: #155724; font-size: 18px; margin-bottom: 15px;">Trip Summary</h3>
+    
+    <p style="color: #155724; font-size: 14px; margin-bottom: 10px;">
+        <strong>Booking ID:</strong> #<%= rideId %>
+    </p>
+    <p style="color: #155724; font-size: 14px; margin-bottom: 10px;">
+        <strong>Driver:</strong> <%= driverName %>
+    </p>
+    <p style="color: #155724; font-size: 14px; margin-bottom: 10px;">
+        <strong>Duration:</strong> <%= duration %> mins
+    </p>
+    <p style="color: #155724; font-size: 14px; margin-bottom: 10px;">
+        <strong>Total Fare:</strong> ₦<%= totalFare %>
+    </p>
+    <p style="color: #155724; font-size: 14px; margin-bottom: 10px;">
+        <strong>Payment Method:</strong> <%= paymentMethod %>
+    </p>
+    <% if (paymentMethod === 'Wallet') { %>
+    <p style="color: #155724; font-size: 14px; margin-bottom: 10px;">
+        <strong>Wallet Balance:</strong> ₦<%= walletBalance %>
+    </p>
+    <% } %>
+</div>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+    We hope you enjoyed your ride! Please consider rating your driver to help us improve our service.
+</p>
+
+<%- include('layout/footer') %>

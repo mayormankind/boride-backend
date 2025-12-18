@@ -1,0 +1,33 @@
+<%- include('layout/header') %>
+
+<h2 style="color: #212529; font-size: 24px; margin-bottom: 15px;">Ride Booked Successfully! 🎉</h2>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+    Hello <strong><%= studentName %></strong>, your ride has been successfully booked!
+</p>
+
+<div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px;">
+    <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">Ride Details</h3>
+    
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Booking ID:</strong> #<%= rideId %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Pickup Location:</strong> <%= pickupLocation %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Dropoff Location:</strong> <%= dropoffLocation %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Estimated Fare:</strong> ₦<%= fare %>
+    </p>
+    <p style="color: #495057; font-size: 14px; margin-bottom: 10px;">
+        <strong>Payment Method:</strong> <%= paymentMethod %>
+    </p>
+</div>
+
+<p style="color: #6c757d; font-size: 14px; line-height: 1.6;">
+    We'll notify you once a driver accepts your ride request. Please keep your phone handy!
+</p>
+
+<%- include('layout/footer') %>

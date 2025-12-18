@@ -1,0 +1,27 @@
+<%- include('layout/header') %>
+
+<h2 style="color: #212529; font-size: 24px; margin-bottom: 15px;">Hello, <%= fullName %>!</h2>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 20px;">
+    Thank you for registering with BoRide. To complete your registration as a <strong><%= userType %></strong>, please verify your email address.
+</p>
+
+<p style="color: #495057; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+    Your One-Time Password (OTP) is:
+</p>
+
+<div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 25px;">
+    <span style="font-size: 36px; font-weight: bold; color: #ffffff; letter-spacing: 8px;">
+        <%= otp %>
+    </span>
+</div>
+
+<p style="color: #6c757d; font-size: 14px; line-height: 1.6; margin-bottom: 15px;">
+    ⏱️ This OTP will expire in <strong>15 minutes</strong>.
+</p>
+
+<p style="color: #6c757d; font-size: 14px; line-height: 1.6;">
+    If you didn't request this verification, please ignore this email or contact our support team.
+</p>
+
+<%- include('layout/footer') %>
