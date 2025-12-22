@@ -203,9 +203,11 @@ export const loginDriver = async (req, res) => {
   
       if (!driver.isVerified) {
         return res.status(403).json({
-          success: false,
-          message: "Email not verified. Please verify before login."
-        });
+            success: false,
+            message: "Email not verified. Please verify before login.",
+            email: driver.email,
+            role: "driver"
+          });
       }
   
       const isMatch = await bcrypt.compare(password, driver.password);
