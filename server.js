@@ -9,6 +9,7 @@ import studentRoutes from "./routes/studentRoutes.js";
 import driverRoutes from "./routes/driverRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan"
+import cookieParser from "cookie-parser"
 
 dotenv.config();
 
@@ -24,9 +25,16 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // middleware
+app.use(cookieParser());
 app.use(express.json());
 app.use(morgan("dev"))
-app.use(cors());
+// app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 app.use(helmet());
 
 connectDB();

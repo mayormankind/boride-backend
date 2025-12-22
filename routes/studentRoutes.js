@@ -4,7 +4,8 @@ import {
   loginStudent, 
   verifyStudentEmail, 
   resendVerificationOTP,
-  updateStudentProfile
+  updateStudentProfile,
+  logout
 } from "../controllers/studentController.js";
 import {
   bookRide,
@@ -34,6 +35,9 @@ router.post("/resend-otp", resendVerificationOTP);
 
 // LOGIN — only if verified
 router.post("/login", loginStudent);
+
+// LOGOUT FOR BOTH STUDENT AND DRIVER
+router.post("/logout", logout)
 
 // ==================== PROFILE ROUTES (Protected) ====================
 router.put("/profile", authenticate("student"), updateStudentProfile);

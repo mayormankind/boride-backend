@@ -5,6 +5,8 @@ import { isValidEmail, isValidMatricNumber } from "../utils/validator.js";
 import { signToken } from "../utils/jwts.js";
 import { sendOTPEmail, sendLoginNotification } from "../utils/mailer.js";
 import Wallet from "../models/wallet.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
+
 
 export async function registerStudent(req, res) {
     try {
@@ -100,73 +102,73 @@ export async function verifyStudentEmail(req, res) {
     }
 }
 
-// Login
+// Login student
 export async function loginStudent(req, res) {
-    try {
-        const { email, matricNo, password } = req.body;
-        
-        if (!password || (!email && !matricNo)) {
-            return res.status(400).json({ 
-                success: false,
-                message: "Provide password and either email or matric number" 
-            });
-        }
+  try {
+    const { email, matricNo, password } = req.body;
 
-        // Find student by email OR matric number
-        const student = await Student.findOne({
-            $or: [
-                { email: email?.trim().toLowerCase() },
-                { matricNo: matricNo?.trim().toUpperCase() }
-            ]
-        });
- 
-        if (!student) {
-            return res.status(404).json({ 
-                success: false,
-                message: "Student not found" 
-            });
-        }
+    if (!password || (!email && !matricNo)) {
+      return res.status(400).json({
+        success: false,
+        message: "Provide password and either email or matric number"
+      });
+    }
 
-        if (!student.isVerified) {
-            return res.status(403).json({
-                success: false,
-                message: "Email not verified. Please verify before login."
-            });
-        }
+    const student = await Student.findOne({
+      $or: [
+        { email: email?.trim().toLowerCase() },
+        { matricNo: matricNo?.trim().toUpperCase() }
+      ]
+    });
 
-        // Check password
-        const isMatch = await bcrypt.compare(password, student.password);
-        if (!isMatch) {
-            return res.status(401).json({ success: false, message: "Incorrect password"});
-        }
+    if (!student) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found"
+      });
+    }
 
-        const token = signToken({
-            id: student._id,
-            email: student.email,
-            matricNo: student.matricNo
-        });
+    if (!student.isVerified) {
+      return res.status(403).json({
+        success: false,
+        message: "Email not verified. Please verify before login."
+      });
+    }
 
-        // SEND LOGIN NOTIFICATION EMAIL
-        // await sendLoginNotification(student.email, student.fullName, "Student");
+    const isMatch = await bcrypt.compare(password, student.password);
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Incorrect password"
+      });
+    }
 
-        return res.status(200).json({
-            success: true,
-            message: "Login successful",
-            token,
-            student: {
-                id: student._id,
-                fullName: student.fullName,
-                email: student.email,
-                matricNo: student.matricNo
-            }
-        });
+    const token = signToken({
+      id: student._id,
+      role: "student"
+    });
 
-    }catch (err) {
-    console.error("LOGIN ERROR:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    // 🔐 SET COOKIE
+    res.cookie("access_token", token, cookieOptions);
+
+    return res.status(200).json({
+      success: true,
+      message: "Login successful",
+      student: {
+        id: student._id,
+        fullName: student.fullName,
+        email: student.email,
+        matricNo: student.matricNo
+      }
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error"
+    });
+  }
 }
-}
-
 
 
 export async function resendVerificationOTP(req, res) {
@@ -264,3 +266,16 @@ export async function updateStudentProfile(req, res) {
     }
 }
 
+export const logout = (req, res) => {
+    res.clearCookie("access_token", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production"
+    });
+  
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  };
+  

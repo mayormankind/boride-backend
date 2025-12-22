@@ -4,6 +4,8 @@ import { signToken } from "../utils/jwts.js";
 import { sendOTPEmail, sendLoginNotification } from "../utils/mailer.js";
 import { isValidEmail } from "../utils/validator.js";
 import Wallet from "../models/wallet.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
+
 
 // ========================= REGISTER DRIVER =========================
 export const registerDriver = async (req, res) => {
@@ -182,71 +184,67 @@ export const resendDriverOTP = async (req, res) => {
 // ========================= LOGIN DRIVER =========================
 export const loginDriver = async (req, res) => {
     try {
-        const { email, password } = req.body;
-
-        if (!email || !password) {
-            return res.status(400).json({ 
-                success: false, 
-                message: "Email and password are required" 
-            });
-        }
-
-        const driver = await Driver.findOne({ email });
-        if (!driver) {
-            return res.json({ 
-                success: false, 
-                message: "Invalid email or password" 
-            });
-        }
-
-        if (!driver.isVerified) {
-            return res.status(403).json({
-                success: false,
-                message: "Email not verified. Please verify before login."
-            });
-        }
-
-        // Compare passwords
-        const isMatch = await bcrypt.compare(password, driver.password);
-        if (!isMatch) {
-            return res.status(401).json({ 
-                success: false, 
-                message: "Invalid email or password" 
-            });
-        }
-
-        // Generate token
-        const token = signToken({
-            id: driver._id,
-            email: driver.email
+      const { email, password } = req.body;
+  
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: "Email and password are required"
         });
-
-        // Send login notification
-        // await sendLoginNotification(driver.email, driver.fullName, "Driver");
-
-        res.status(200).json({
-            success: true,
-            message: "Login successful",
-            token,
-            driver: {
-                id: driver._id,
-                fullName: driver.fullName,
-                email: driver.email,
-                phoneNo: driver.phoneNo,
-                isAvailable: driver.isAvailable,
-                vehicleInfo: driver.vehicleInfo,
-                profileImage: driver.profileImage
-            }
+      }
+  
+      const driver = await Driver.findOne({ email });
+      if (!driver) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid email or password"
         });
-
+      }
+  
+      if (!driver.isVerified) {
+        return res.status(403).json({
+          success: false,
+          message: "Email not verified. Please verify before login."
+        });
+      }
+  
+      const isMatch = await bcrypt.compare(password, driver.password);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: "Invalid email or password"
+        });
+      }
+  
+      const token = signToken({
+        id: driver._id,
+        role: "driver"
+      });
+  
+      // 🔐 SET COOKIE
+      res.cookie("access_token", token, cookieOptions);
+  
+      return res.status(200).json({
+        success: true,
+        message: "Login successful",
+        driver: {
+          id: driver._id,
+          fullName: driver.fullName,
+          email: driver.email,
+          phoneNo: driver.phoneNo,
+          isAvailable: driver.isAvailable,
+          vehicleInfo: driver.vehicleInfo
+        }
+      });
+  
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
-            message: "Server error", 
-            error: error.message 
-        });
+      return res.status(500).json({
+        success: false,
+        message: "Server error"
+      });
     }
-};
+  };
+  
 
 // ========================= UPDATE DRIVER PROFILE =========================
 export const updateDriverProfile = async (req, res) => {

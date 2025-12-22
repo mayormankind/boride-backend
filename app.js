@@ -7,6 +7,8 @@ import studentRoutes from "./routes/studentRoutes.js";
 import driverRoutes from "./routes/driverRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan"
+import cookieParser from "cookie-parser"
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +21,7 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // middleware
+app.use(cookieParser())
 app.use(express.json());
 app.use(morgan("dev"))
 app.use(cors());

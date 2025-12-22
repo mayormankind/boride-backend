@@ -4,21 +4,20 @@ import Driver from "../models/driver.js";
 
 /**
  * Middleware to authenticate and attach user to request
- * @param {string} userType - 'student' or 'driver'
+ * @param {string} userType - 'student' | 'driver'
  */
 export function authenticate(userType) {
   return async (req, res, next) => {
     try {
-      const authHeader = req.headers.authorization;
+      const token = req.cookies?.access_token;
 
-      if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      if (!token) {
         return res.status(401).json({
           success: false,
-          message: "No token provided",
+          message: "Not authenticated",
         });
       }
 
-      const token = authHeader.split(" ")[1];
       const decoded = verifyToken(token);
 
       if (!decoded) {
@@ -28,8 +27,8 @@ export function authenticate(userType) {
         });
       }
 
-      // Find user based on type
       let user;
+
       if (userType === "student") {
         user = await Student.findById(decoded.id).select("-password");
       } else if (userType === "driver") {
@@ -43,15 +42,14 @@ export function authenticate(userType) {
         });
       }
 
-      // Attach user to request
       req.user = user;
       req.userType = userType;
+
       next();
     } catch (error) {
       return res.status(500).json({
         success: false,
         message: "Authentication error",
-        error: error.message,
       });
     }
   };
