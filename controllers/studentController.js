@@ -271,8 +271,8 @@ export async function updateStudentProfile(req, res) {
 export const logout = (req, res) => {
     res.clearCookie("access_token", {
       httpOnly: true,
-      sameSite: "strict",
-      secure: process.env.NODE_ENV === "production"
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
     });
   
     return res.status(200).json({
