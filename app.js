@@ -1,3 +1,4 @@
+//app.js
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -8,6 +9,7 @@ import driverRoutes from "./routes/driverRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
+import { authMe } from "./controllers/authMe.js"
 
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +42,7 @@ connectDB();
 // api routes
 app.use("/api/student", studentRoutes);
 app.use("/api/driver", driverRoutes);
+app.get("/api/auth/me", authMe)
 
 // Health check endpoint
 app.get("/", (req, res) => {

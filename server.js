@@ -10,6 +10,8 @@ import driverRoutes from "./routes/driverRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan"
 import cookieParser from "cookie-parser"
+import { authMe } from "./controllers/authMe.js"
+
 
 dotenv.config();
 
@@ -46,6 +48,7 @@ connectDB();
 // api routes
 app.use("/api/student", studentRoutes);
 app.use("/api/driver", driverRoutes);
+app.get("/api/auth/me", authMe)
 
 // Health check endpoint
 app.get("/", (req, res) => {
