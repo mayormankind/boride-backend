@@ -287,8 +287,10 @@ export const toggleAvailability = async (req, res) => {
         const driverId = req.user._id;
 
         const driver = await Driver.findById(driverId);
+        console.log(driver);
         driver.isAvailable = !driver.isAvailable;
         await driver.save();
+        console.log(driver)
 
         return res.status(200).json({
             success: true,
