@@ -12,6 +12,11 @@ import cookieParser from "cookie-parser"
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "https://boride-ruby.vercel.app",
+];
 
 // started the express app
 const app = express();
@@ -24,7 +29,10 @@ app.set("views", path.join(__dirname, "views"));
 app.use(cookieParser())
 app.use(express.json());
 app.use(morgan("dev"))
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(helmet());
 
 connectDB();
