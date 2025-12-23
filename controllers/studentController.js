@@ -160,7 +160,10 @@ export async function loginStudent(req, res) {
         id: student._id,
         fullName: student.fullName,
         email: student.email,
-        matricNo: student.matricNo
+        matricNo: student.matricNo,
+        phoneNo: student.phoneNo,
+        profileImage: student.profileImage,
+        isVerified: student.isVerified,
       }
     });
 

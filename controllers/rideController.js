@@ -7,6 +7,7 @@ import {
   sendRideAcceptedEmail,
   sendRideCompletedEmail,
 } from "../utils/mailer.js";
+import { serializeRide } from "../utils/rideSerializer.js";
 
 // ========================= STUDENT BOOKS A RIDE =========================
 export async function bookRide(req, res) {
@@ -82,14 +83,7 @@ export async function bookRide(req, res) {
     return res.status(201).json({
       success: true,
       message: "Ride booked successfully",
-      ride: {
-        id: ride._id,
-        status: ride.status,
-        pickupLocation: ride.pickupLocation,
-        dropoffLocation: ride.dropoffLocation,
-        fare: ride.fare,
-        paymentMethod: ride.paymentMethod,
-      },
+      ride: serializeRide(ride),
     });
   } catch (error) {
     console.error("Book Ride Error:", error);
@@ -282,7 +276,7 @@ export async function startRide(req, res) {
     return res.status(200).json({
       success: true,
       message: "Ride started successfully",
-      ride,
+      ride: serializeRide(ride),
     });
   } catch (error) {
     return res.status(500).json({
@@ -402,7 +396,7 @@ export async function completeRide(req, res) {
     return res.status(200).json({
       success: true,
       message: "Ride completed successfully",
-      ride,
+      ride: serializeRide(ride),
     });
   } catch (error) {
     console.error("Complete Ride Error:", error);
@@ -461,7 +455,7 @@ export async function cancelRide(req, res) {
     return res.status(200).json({
       success: true,
       message: "Ride cancelled successfully",
-      ride,
+      ride:serializeRide(ride),
     });
   } catch (error) {
     return res.status(500).json({
@@ -532,7 +526,7 @@ export async function rateRide(req, res) {
     return res.status(200).json({
       success: true,
       message: "Rating submitted successfully",
-      ride,
+      ride: serializeRide(ride),
     });
   } catch (error) {
     return res.status(500).json({
@@ -574,7 +568,7 @@ export async function getRideDetails(req, res) {
 
     return res.status(200).json({
       success: true,
-      ride,
+      ride: serializeRide(ride),
     });
   } catch (error) {
     return res.status(500).json({
