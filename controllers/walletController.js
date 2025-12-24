@@ -1,6 +1,6 @@
 import Wallet from "../models/wallet.js";
 
-// ========================= GET WALLET BALANCE =========================
+// GET WALLET BALANCE
 export async function getWalletBalance(req, res) {
   try {
     const userId = req.user._id;
@@ -29,7 +29,7 @@ export async function getWalletBalance(req, res) {
   }
 }
 
-// ========================= GET TRANSACTION HISTORY =========================
+// GET TRANSACTION HISTORY
 export async function getTransactionHistory(req, res) {
   try {
     const userId = req.user._id;
@@ -71,7 +71,7 @@ export async function getTransactionHistory(req, res) {
   }
 }
 
-// ========================= FUND WALLET (Student Only) =========================
+// FUND WALLET (Student Only)
 export async function fundWallet(req, res) {
   try {
     const userId = req.user._id;
@@ -121,7 +121,7 @@ export async function fundWallet(req, res) {
   }
 }
 
-// ========================= WITHDRAW FROM WALLET (Driver Only) =========================
+// WITHDRAW FROM WALLET (Driver Only)
 export async function withdrawFromWallet(req, res) {
   try {
     const userId = req.user._id;

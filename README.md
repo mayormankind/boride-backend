@@ -243,8 +243,6 @@ const response = await fetch('http://localhost:5000/api/student/login', {
   body: JSON.stringify({ email, password })
 });
 
-const { token, student } = await response.json();
-localStorage.setItem('token', token);
 ```
 
 ### Booking with Insufficient Balance
@@ -301,14 +299,14 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch
 5. Open a pull request
 
-## License 📄
+## License
 
 This project is licensed under the ISC License.
 
-## Support 📞
+## Support
 
 For issues or questions:
-- Email: support@boride.com
+- Email: mayowamakinde23@gmail.com
 - GitHub Issues: [Create an issue]
 
 ---

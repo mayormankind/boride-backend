@@ -9,7 +9,7 @@ import {
 } from "../utils/mailer.js";
 import { serializeRide } from "../utils/rideSerializer.js";
 
-// ========================= STUDENT BOOKS A RIDE =========================
+// STUDENT BOOKS A RIDE
 export async function bookRide(req, res) {
   try {
     const studentId = req.user._id;
@@ -95,7 +95,7 @@ export async function bookRide(req, res) {
   }
 }
 
-// ========================= GET STUDENT'S RIDES =========================
+// GET STUDENT'S RIDES
 export async function getStudentRides(req, res) {
   try {
     const studentId = req.user._id;
@@ -124,7 +124,7 @@ export async function getStudentRides(req, res) {
   }
 }
 
-// ========================= GET AVAILABLE RIDES FOR DRIVER =========================
+// GET AVAILABLE RIDES FOR DRIVER
 export async function getAvailableRides(req, res) {
   try {
     // Get pending rides
@@ -147,7 +147,7 @@ export async function getAvailableRides(req, res) {
   }
 }
 
-// ========================= DRIVER ACCEPTS A RIDE =========================
+// DRIVER ACCEPTS A RIDE
 export async function acceptRide(req, res) {
   try {
     const driverId = req.user._id;
@@ -211,7 +211,7 @@ export async function acceptRide(req, res) {
   }
 }
 
-// ========================= GET DRIVER'S RIDES =========================
+// GET DRIVER'S RIDES
 export async function getDriverRides(req, res) {
   try {
     const driverId = req.user._id;
@@ -240,7 +240,7 @@ export async function getDriverRides(req, res) {
   }
 }
 
-// ========================= START RIDE =========================
+// START RIDE
 export async function startRide(req, res) {
   try {
     const driverId = req.user._id;
@@ -287,7 +287,7 @@ export async function startRide(req, res) {
   }
 }
 
-// ========================= COMPLETE RIDE =========================
+// COMPLETE RIDE
 export async function completeRide(req, res) {
   try {
     const driverId = req.user._id;
@@ -408,7 +408,7 @@ export async function completeRide(req, res) {
   }
 }
 
-// ========================= CANCEL RIDE =========================
+// CANCEL RIDE
 export async function cancelRide(req, res) {
   try {
     const userId = req.user._id;
@@ -466,7 +466,7 @@ export async function cancelRide(req, res) {
   }
 }
 
-// ========================= RATE RIDE (Student) =========================
+// RATE RIDE (Student)
 export async function rateRide(req, res) {
   try {
     const studentId = req.user._id;
@@ -537,7 +537,7 @@ export async function rateRide(req, res) {
   }
 }
 
-// ========================= GET SINGLE RIDE DETAILS =========================
+// GET SINGLE RIDE DETAILS
 export async function getRideDetails(req, res) {
   try {
     const userId = req.user._id;

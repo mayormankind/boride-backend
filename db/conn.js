@@ -14,7 +14,7 @@
 //     }
 // }
 
-
+// for deployment in vercel(stateless server could produce multiple mongo instance)
 import mongoose from "mongoose";
 
 let cached = global.mongoose;

@@ -23,7 +23,6 @@ import { authenticate } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// ==================== AUTH ROUTES ====================
 // REGISTER — send OTP to email
 router.post("/register", registerStudent);
 
@@ -39,17 +38,17 @@ router.post("/login", loginStudent);
 // LOGOUT FOR BOTH STUDENT AND DRIVER
 router.post("/logout", logout)
 
-// ==================== PROFILE ROUTES (Protected) ====================
+// PROFILE ROUTES (Protected)
 router.put("/profile", authenticate("student"), updateStudentProfile);
 
-// ==================== RIDE ROUTES (Protected) ====================
+// RIDE ROUTES (Protected)
 router.post("/rides", authenticate("student"), bookRide);
 router.get("/rides", authenticate("student"), getStudentRides);
 router.get("/rides/:rideId", authenticate("student"), getRideDetails);
 router.put("/rides/:rideId/cancel", authenticate("student"), cancelRide);
 router.put("/rides/:rideId/rate", authenticate("student"), rateRide);
 
-// ==================== WALLET ROUTES (Protected) ====================
+// WALLET ROUTES (Protected)
 router.get("/wallet", authenticate("student"), getWalletBalance);
 router.get("/wallet/transactions", authenticate("student"), getTransactionHistory);
 router.post("/wallet/fund", authenticate("student"), fundWallet);

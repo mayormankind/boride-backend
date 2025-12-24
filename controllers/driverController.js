@@ -7,7 +7,7 @@ import Wallet from "../models/wallet.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
 
-// ========================= REGISTER DRIVER =========================
+// REGISTER DRIVER 
 export const registerDriver = async (req, res) => {
     try {
         const { email, fullName, password, phoneNo } = req.body;
@@ -28,7 +28,6 @@ export const registerDriver = async (req, res) => {
             });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
         // Generate OTP
@@ -70,7 +69,7 @@ export const registerDriver = async (req, res) => {
     }
 };
 
-// ========================= VERIFY DRIVER EMAIL =========================
+// VERIFY DRIVER EMAIL
 export const verifyDriverEmail = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -122,7 +121,7 @@ export const verifyDriverEmail = async (req, res) => {
     }
 };
 
-// ========================= RESEND OTP =========================
+// RESEND OTP
 export const resendDriverOTP = async (req, res) => {
     try {
         const { email, driverId } = req.body;
@@ -181,7 +180,7 @@ export const resendDriverOTP = async (req, res) => {
     }
 };
 
-// ========================= LOGIN DRIVER =========================
+// LOGIN DRIVER
 export const loginDriver = async (req, res) => {
     try {
       const { email, password } = req.body;
@@ -223,7 +222,7 @@ export const loginDriver = async (req, res) => {
         role: "driver"
       });
   
-      // 🔐 SET COOKIE
+      // SET COOKIE
       res.cookie("access_token", token, cookieOptions);
   
       return res.status(200).json({
@@ -248,7 +247,7 @@ export const loginDriver = async (req, res) => {
   };
   
 
-// ========================= UPDATE DRIVER PROFILE =========================
+// UPDATE DRIVER PROFILE
 export const updateDriverProfile = async (req, res) => {
     try {
         const driverId = req.user._id;
@@ -281,16 +280,14 @@ export const updateDriverProfile = async (req, res) => {
     }
 };
 
-// ========================= TOGGLE DRIVER AVAILABILITY =========================
+// TOGGLE DRIVER AVAILABILITY
 export const toggleAvailability = async (req, res) => {
     try {
         const driverId = req.user._id;
 
         const driver = await Driver.findById(driverId);
-        console.log(driver);
         driver.isAvailable = !driver.isAvailable;
         await driver.save();
-        console.log(driver)
 
         return res.status(200).json({
             success: true,

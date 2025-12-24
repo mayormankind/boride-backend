@@ -180,7 +180,7 @@ export async function resendVerificationOTP(req, res) {
     try {
         const { email, studentId } = req.body;
 
-        // Must provide something to identify the student
+        // Validation to ensure student must provide something to get identified(email/id)
         if (!email && !studentId) {
             return res.status(400).json({
                 success: false,
@@ -238,17 +238,15 @@ export async function resendVerificationOTP(req, res) {
     }
 }
 
-// ========================= UPDATE STUDENT PROFILE =========================
+// UPDATE STUDENT PROFILE
 export async function updateStudentProfile(req, res) {
     try {
         const studentId = req.user._id;
-        const { fullName, phoneNo, department, level, profileImage } = req.body;
+        const { fullName, phoneNo, profileImage } = req.body;
 
         const updateData = {};
         if (fullName) updateData.fullName = fullName;
         if (phoneNo) updateData.phoneNo = phoneNo;
-        if (department) updateData.department = department;
-        if (level) updateData.level = level;
         if (profileImage) updateData.profileImage = profileImage;
 
         const student = await Student.findByIdAndUpdate(
