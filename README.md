@@ -170,7 +170,7 @@ GET    /api/driver/wallet/transactions    [Protected]
 POST   /api/driver/wallet/withdraw        [Protected]
 ```
 
-For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+<!-- For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md) -->
 
 ## Database Models 🗄️
 
@@ -311,4 +311,4 @@ For issues or questions:
 
 ---
 
-Made with ❤️ for campus transportation
+Made with ❤️ - (wahala for who dey love)
