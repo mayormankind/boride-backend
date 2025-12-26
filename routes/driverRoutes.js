@@ -5,7 +5,8 @@ import {
   verifyDriverEmail,
   resendDriverOTP,
   updateDriverProfile,
-  toggleAvailability
+  toggleAvailability,
+  getDriverStats
 } from "../controllers/driverController.js";
 import {
   getAvailableRides,
@@ -48,5 +49,7 @@ router.put("/rides/:rideId/cancel", authenticate("driver"), cancelRide);
 router.get("/wallet", authenticate("driver"), getWalletBalance);
 router.get("/wallet/transactions", authenticate("driver"), getTransactionHistory);
 router.post("/wallet/withdraw", authenticate("driver"), withdrawFromWallet);
+
+router.get("/stats", authenticate("driver"), getDriverStats);
 
 export default router;

@@ -5,7 +5,8 @@ import {
   verifyStudentEmail, 
   resendVerificationOTP,
   updateStudentProfile,
-  logout
+  logout,
+  getStudentStats
 } from "../controllers/studentController.js";
 import {
   bookRide,
@@ -52,5 +53,7 @@ router.put("/rides/:rideId/rate", authenticate("student"), rateRide);
 router.get("/wallet", authenticate("student"), getWalletBalance);
 router.get("/wallet/transactions", authenticate("student"), getTransactionHistory);
 router.post("/wallet/fund", authenticate("student"), fundWallet);
+
+router.get("/stats", authenticate("student"), getStudentStats);
 
 export default router;

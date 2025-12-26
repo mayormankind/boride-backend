@@ -1,3 +1,4 @@
+// controllers/driverController.js
 import Driver from "../models/driver.js";
 import bcrypt from "bcryptjs";
 import { signToken } from "../utils/jwts.js";
@@ -5,6 +6,7 @@ import { sendOTPEmail, sendLoginNotification } from "../utils/mailer.js";
 import { isValidEmail } from "../utils/validator.js";
 import Wallet from "../models/wallet.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
+import Ride from "../models/ride.js";
 
 
 // REGISTER DRIVER 
@@ -302,3 +304,47 @@ export const toggleAvailability = async (req, res) => {
         });
     }
 };
+
+// GET DRIVER STATS
+export async function getDriverStats(req, res) {
+  try {
+    const driverId = req.user._id;
+
+    const driver = await Driver.findById(driverId).select(
+      "fullName rating totalRides isAvailable"
+    );
+
+    const wallet = await Wallet.findOne({
+      user: driverId,
+      userType: "Driver",
+    });
+
+    const completedRides = await Ride.countDocuments({
+      driver: driverId,
+      status: "completed",
+    });
+
+    const ongoingRides = await Ride.countDocuments({
+      driver: driverId,
+      status: "ongoing",
+    });
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        totalRides: driver.totalRides,
+        completedRides,
+        ongoingRides,
+        rating: driver.rating,
+        isAvailable: driver.isAvailable,
+        walletBalance: wallet?.balance || 0,
+      },
+    });
+  } catch (error) {
+    console.error("Driver Stats Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+}

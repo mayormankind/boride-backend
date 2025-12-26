@@ -6,6 +6,7 @@ import { signToken } from "../utils/jwts.js";
 import { sendOTPEmail, sendLoginNotification } from "../utils/mailer.js";
 import Wallet from "../models/wallet.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
+import Ride from "../models/ride.js";
 
 
 export async function registerStudent(req, res) {
@@ -280,5 +281,66 @@ export const logout = (req, res) => {
       success: true,
       message: "Logged out successfully"
     });
-  };
+};
+
+export async function getStudentStats(req, res) {
+  try {
+    const studentId = req.user._id;
+
+    // Basic student info (future-proofing)
+    const student = await Student.findById(studentId).select(
+      "fullName matricNo"
+    );
+
+    // Wallet
+    const wallet = await Wallet.findOne({
+      user: studentId,
+      userType: "Student",
+    });
+
+    // Ride counts
+    const totalRides = await Ride.countDocuments({
+      student: studentId,
+    });
+
+    const completedRides = await Ride.countDocuments({
+      student: studentId,
+      status: "completed",
+    });
+
+    const ongoingRides = await Ride.countDocuments({
+      student: studentId,
+      status: "ongoing",
+    });
+
+    const cancelledRides = await Ride.countDocuments({
+      student: studentId,
+      status: "cancelled",
+    });
+
+    return res.status(200).json({
+      success: true,
+      stats: {
+        student: {
+          fullName: student.fullName,
+          matricNo: student.matricNo,
+        },
+        walletBalance: wallet?.balance || 0,
+        rides: {
+          total: totalRides,
+          completed: completedRides,
+          ongoing: ongoingRides,
+          cancelled: cancelledRides,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Student Stats Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+}
+
   

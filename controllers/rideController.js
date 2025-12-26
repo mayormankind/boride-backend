@@ -1,3 +1,4 @@
+// controllers/rideControllers
 import Ride from "../models/ride.js";
 import Wallet from "../models/wallet.js";
 import Student from "../models/student.js";
