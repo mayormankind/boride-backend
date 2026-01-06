@@ -56,7 +56,7 @@ export async function bookRide(req, res) {
       }
     }
 
-    // Create ride
+    // Create ride with initial timeline event
     const ride = await Ride.create({
       student: studentId,
       pickupLocation,
@@ -66,6 +66,13 @@ export async function bookRide(req, res) {
       estimatedDistance,
       estimatedDuration,
       status: "pending",
+      timeline: [
+        {
+          type: "requested",
+          message: "Ride requested by student",
+          timestamp: new Date(),
+        },
+      ],
     });
 
     // Get student info for email
@@ -115,6 +122,7 @@ export async function getStudentRides(req, res) {
       success: true,
       count: rides.length,
       rides,
+      // data: rides.map(serializeRide),
     });
   } catch (error) {
     return res.status(500).json({
@@ -181,9 +189,14 @@ export async function acceptRide(req, res) {
       });
     }
 
-    // Update ride
+    // Update ride and add timeline event
     ride.driver = driverId;
     ride.status = "accepted";
+    ride.timeline.push({
+      type: "accepted",
+      message: `Ride accepted by driver ${driver.fullName}`,
+      timestamp: new Date(),
+    });
     await ride.save();
 
     // Send email notification to student
@@ -231,6 +244,7 @@ export async function getDriverRides(req, res) {
       success: true,
       count: rides.length,
       rides,
+      // data: rides.map(serializeRide),
     });
   } catch (error) {
     return res.status(500).json({
@@ -272,6 +286,11 @@ export async function startRide(req, res) {
 
     ride.status = "ongoing";
     ride.startTime = new Date();
+    ride.timeline.push({
+      type: "started",
+      message: "Ride started - driver picked up passenger",
+      timestamp: new Date(),
+    });
     await ride.save();
 
     return res.status(200).json({
@@ -344,7 +363,10 @@ export async function completeRide(req, res) {
       studentWallet.transactions.push({
         type: "debit",
         amount: ride.fare,
-        description: `Ride payment - #${ride._id.toString().slice(-8).toUpperCase()}`,
+        description: `Ride payment - #${ride._id
+          .toString()
+          .slice(-8)
+          .toUpperCase()}`,
         relatedRide: ride._id,
         balanceBefore: studentBalanceBefore,
         balanceAfter: studentWallet.balance,
@@ -357,7 +379,10 @@ export async function completeRide(req, res) {
       driverWallet.transactions.push({
         type: "credit",
         amount: ride.fare,
-        description: `Ride earnings - #${ride._id.toString().slice(-8).toUpperCase()}`,
+        description: `Ride earnings - #${ride._id
+          .toString()
+          .slice(-8)
+          .toUpperCase()}`,
         relatedRide: ride._id,
         balanceBefore: driverBalanceBefore,
         balanceAfter: driverWallet.balance,
@@ -365,11 +390,16 @@ export async function completeRide(req, res) {
       await driverWallet.save();
     }
 
-    // Update ride
+    // Update ride and add timeline event
     ride.status = "completed";
     ride.endTime = new Date();
     ride.actualDistance = actualDistance;
     ride.actualDuration = actualDuration;
+    ride.timeline.push({
+      type: "completed",
+      message: "Ride completed successfully",
+      timestamp: new Date(),
+    });
     await ride.save();
 
     // Update driver stats
@@ -426,14 +456,20 @@ export async function cancelRide(req, res) {
     }
 
     // Verify user can cancel this ride
-    if (userType === "student" && ride.student.toString() !== userId.toString()) {
+    if (
+      userType === "student" &&
+      ride.student.toString() !== userId.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "Unauthorized",
       });
     }
 
-    if (userType === "driver" && ride.driver?.toString() !== userId.toString()) {
+    if (
+      userType === "driver" &&
+      ride.driver?.toString() !== userId.toString()
+    ) {
       return res.status(403).json({
         success: false,
         message: "Unauthorized",
@@ -451,12 +487,19 @@ export async function cancelRide(req, res) {
     ride.status = "cancelled";
     ride.cancelledBy = userType;
     ride.cancellationReason = reason || "No reason provided";
+    ride.timeline.push({
+      type: "cancelled",
+      message: `Ride cancelled by ${userType}: ${
+        reason || "No reason provided"
+      }`,
+      timestamp: new Date(),
+    });
     await ride.save();
 
     return res.status(200).json({
       success: true,
       message: "Ride cancelled successfully",
-      ride:serializeRide(ride),
+      ride: serializeRide(ride),
     });
   } catch (error) {
     return res.status(500).json({
@@ -557,8 +600,12 @@ export async function getRideDetails(req, res) {
     }
 
     // Verify user has access to this ride
-    const isStudent = userType === "student" && ride.student._id.toString() === userId.toString();
-    const isDriver = userType === "driver" && ride.driver?._id.toString() === userId.toString();
+    const isStudent =
+      userType === "student" &&
+      ride.student._id.toString() === userId.toString();
+    const isDriver =
+      userType === "driver" &&
+      ride.driver?._id.toString() === userId.toString();
 
     if (!isStudent && !isDriver) {
       return res.status(403).json({
@@ -570,6 +617,263 @@ export async function getRideDetails(req, res) {
     return res.status(200).json({
       success: true,
       ride: serializeRide(ride),
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+}
+
+// DRIVER REQUESTS RIDE COMPLETION (Step 1 of 2-step completion)
+export async function requestCompletion(req, res) {
+  try {
+    const driverId = req.user._id;
+    const { rideId } = req.params;
+    const { actualDistance, actualDuration } = req.body;
+
+    const ride = await Ride.findById(rideId).populate("student");
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        message: "Ride not found",
+      });
+    }
+
+    // Verify driver owns this ride
+    if (ride.driver.toString() !== driverId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (ride.status !== "ongoing") {
+      return res.status(400).json({
+        success: false,
+        message: "Ride must be ongoing to request completion",
+      });
+    }
+
+    // If wallet payment, lock the funds (but don't deduct yet)
+    if (ride.paymentMethod === "Wallet") {
+      const studentWallet = await Wallet.findOne({
+        user: ride.student._id,
+        userType: "Student",
+      });
+
+      if (!studentWallet || studentWallet.balance < ride.fare) {
+        return res.status(400).json({
+          success: false,
+          message: "Insufficient wallet balance",
+        });
+      }
+
+      // Mark funds as locked
+      ride.walletLocked = true;
+      ride.lockedAmount = ride.fare;
+    }
+
+    // Update ride status to completion_requested
+    ride.status = "completion_requested";
+    ride.completionRequestedAt = new Date();
+    ride.actualDistance = actualDistance;
+    ride.actualDuration = actualDuration;
+    ride.timeline.push({
+      type: "completion_requested",
+      message:
+        "Driver has marked ride as completed. Waiting for student confirmation.",
+      timestamp: new Date(),
+    });
+    await ride.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Completion request sent. Waiting for student confirmation.",
+      ride: serializeRide(ride),
+    });
+  } catch (error) {
+    console.error("Request Completion Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+}
+
+// STUDENT CONFIRMS OR REJECTS RIDE COMPLETION (Step 2 of 2-step completion)
+export async function confirmCompletion(req, res) {
+  try {
+    const studentId = req.user._id;
+    const { rideId } = req.params;
+    const { action, reason } = req.body; // action: 'confirm' | 'reject'
+
+    if (!["confirm", "reject"].includes(action)) {
+      return res.status(400).json({
+        success: false,
+        message: "Action must be 'confirm' or 'reject'",
+      });
+    }
+
+    const ride = await Ride.findById(rideId)
+      .populate("student")
+      .populate("driver");
+    if (!ride) {
+      return res.status(404).json({
+        success: false,
+        message: "Ride not found",
+      });
+    }
+
+    // Verify student owns this ride
+    if (ride.student._id.toString() !== studentId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized",
+      });
+    }
+
+    if (ride.status !== "completion_requested") {
+      return res.status(400).json({
+        success: false,
+        message: "Ride is not awaiting confirmation",
+      });
+    }
+
+    if (action === "confirm") {
+      // Process payment if wallet
+      if (ride.paymentMethod === "Wallet") {
+        const studentWallet = await Wallet.findOne({
+          user: ride.student._id,
+          userType: "Student",
+        });
+
+        const driverWallet = await Wallet.findOne({
+          user: ride.driver._id,
+          userType: "Driver",
+        });
+
+        // Final balance check
+        if (studentWallet.balance < ride.fare) {
+          return res.status(400).json({
+            success: false,
+            message: "Insufficient wallet balance",
+          });
+        }
+
+        // Deduct from student
+        const studentBalanceBefore = studentWallet.balance;
+        studentWallet.balance -= ride.fare;
+        studentWallet.transactions.push({
+          type: "debit",
+          amount: ride.fare,
+          description: `Ride payment - #${ride._id
+            .toString()
+            .slice(-8)
+            .toUpperCase()}`,
+          relatedRide: ride._id,
+          balanceBefore: studentBalanceBefore,
+          balanceAfter: studentWallet.balance,
+        });
+        await studentWallet.save();
+
+        // Add to driver
+        const driverBalanceBefore = driverWallet.balance;
+        driverWallet.balance += ride.fare;
+        driverWallet.transactions.push({
+          type: "credit",
+          amount: ride.fare,
+          description: `Ride earnings - #${ride._id
+            .toString()
+            .slice(-8)
+            .toUpperCase()}`,
+          relatedRide: ride._id,
+          balanceBefore: driverBalanceBefore,
+          balanceAfter: driverWallet.balance,
+        });
+        await driverWallet.save();
+      }
+
+      // Complete the ride
+      ride.status = "completed";
+      ride.endTime = new Date();
+      ride.walletLocked = false;
+      ride.lockedAmount = 0;
+      ride.timeline.push({
+        type: "completed",
+        message: "Ride completed and confirmed by student",
+        timestamp: new Date(),
+      });
+      await ride.save();
+
+      // Update driver stats
+      const driver = await Driver.findById(ride.driver._id);
+      driver.totalRides += 1;
+      await driver.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Ride completed successfully",
+        ride: serializeRide(ride),
+      });
+    } else {
+      // Reject - set status to disputed and release wallet lock
+      ride.status = "disputed";
+      ride.walletLocked = false;
+      ride.lockedAmount = 0;
+      ride.disputeReason = reason || "Student rejected completion";
+      ride.timeline.push({
+        type: "disputed",
+        message: `Student disputed completion: ${
+          reason || "No reason provided"
+        }`,
+        timestamp: new Date(),
+      });
+      await ride.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Ride completion disputed. Please contact support.",
+        ride: serializeRide(ride),
+      });
+    }
+  } catch (error) {
+    console.error("Confirm Completion Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+}
+
+// CHECK FOR PENDING CONFIRMATION (for student dashboard)
+export async function getPendingConfirmation(req, res) {
+  try {
+    const studentId = req.user._id;
+
+    const pendingRide = await Ride.findOne({
+      student: studentId,
+      status: "completion_requested",
+    })
+      .populate("driver", "fullName phoneNo vehicleInfo")
+      .sort({ completionRequestedAt: -1 });
+
+    if (!pendingRide) {
+      return res.status(200).json({
+        success: true,
+        hasPending: false,
+        ride: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      hasPending: true,
+      ride: serializeRide(pendingRide),
     });
   } catch (error) {
     return res.status(500).json({

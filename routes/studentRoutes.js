@@ -1,12 +1,12 @@
 import express from "express";
-import { 
-  registerStudent, 
-  loginStudent, 
-  verifyStudentEmail, 
+import {
+  registerStudent,
+  loginStudent,
+  verifyStudentEmail,
   resendVerificationOTP,
   updateStudentProfile,
   logout,
-  getStudentStats
+  getStudentStats,
 } from "../controllers/studentController.js";
 import {
   bookRide,
@@ -14,6 +14,8 @@ import {
   cancelRide,
   rateRide,
   getRideDetails,
+  confirmCompletion,
+  getPendingConfirmation,
 } from "../controllers/rideController.js";
 import {
   getWalletBalance,
@@ -37,21 +39,37 @@ router.post("/resend-otp", resendVerificationOTP);
 router.post("/login", loginStudent);
 
 // LOGOUT FOR BOTH STUDENT AND DRIVER
-router.post("/logout", logout)
+router.post("/logout", logout);
 
 // PROFILE ROUTES (Protected)
 router.put("/profile", authenticate("student"), updateStudentProfile);
 
 // RIDE ROUTES (Protected)
+// Static routes MUST come before dynamic :rideId routes
 router.post("/rides", authenticate("student"), bookRide);
 router.get("/rides", authenticate("student"), getStudentRides);
+router.get(
+  "/rides/pending-confirmation",
+  authenticate("student"),
+  getPendingConfirmation
+);
+// Dynamic routes
 router.get("/rides/:rideId", authenticate("student"), getRideDetails);
 router.put("/rides/:rideId/cancel", authenticate("student"), cancelRide);
 router.put("/rides/:rideId/rate", authenticate("student"), rateRide);
+router.put(
+  "/rides/:rideId/confirm",
+  authenticate("student"),
+  confirmCompletion
+);
 
 // WALLET ROUTES (Protected)
 router.get("/wallet", authenticate("student"), getWalletBalance);
-router.get("/wallet/transactions", authenticate("student"), getTransactionHistory);
+router.get(
+  "/wallet/transactions",
+  authenticate("student"),
+  getTransactionHistory
+);
 router.post("/wallet/fund", authenticate("student"), fundWallet);
 
 router.get("/stats", authenticate("student"), getStudentStats);

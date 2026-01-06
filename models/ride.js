@@ -43,7 +43,15 @@ const rideSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "ongoing", "completed", "cancelled"],
+      enum: [
+        "pending",
+        "accepted",
+        "ongoing",
+        "completion_requested",
+        "completed",
+        "disputed",
+        "cancelled",
+      ],
       default: "pending",
     },
     estimatedDistance: {
@@ -70,6 +78,19 @@ const rideSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // Wallet lock for completion_requested state
+    walletLocked: {
+      type: Boolean,
+      default: false,
+    },
+    lockedAmount: {
+      type: Number,
+      default: 0,
+    },
+    completionRequestedAt: {
+      type: Date,
+      default: null,
+    },
     rating: {
       type: Number,
       min: 1,
@@ -89,6 +110,37 @@ const rideSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    disputeReason: {
+      type: String,
+      default: null,
+    },
+    // Immutable ride lifecycle timeline - append only
+    timeline: [
+      {
+        type: {
+          type: String,
+          enum: [
+            "requested",
+            "accepted",
+            "driver_arrived",
+            "started",
+            "completion_requested",
+            "completed",
+            "disputed",
+            "cancelled",
+          ],
+          required: true,
+        },
+        message: {
+          type: String,
+          default: "",
+        },
+        timestamp: {
+          type: Date,
+          default: Date.now,
+        },
+      },
+    ],
   },
   { timestamps: true }
 );

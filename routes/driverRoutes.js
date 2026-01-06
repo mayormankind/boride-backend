@@ -1,12 +1,12 @@
 import express from "express";
-import { 
-  registerDriver, 
+import {
+  registerDriver,
   loginDriver,
   verifyDriverEmail,
   resendDriverOTP,
   updateDriverProfile,
   toggleAvailability,
-  getDriverStats
+  getDriverStats,
 } from "../controllers/driverController.js";
 import {
   getAvailableRides,
@@ -14,6 +14,7 @@ import {
   getDriverRides,
   startRide,
   completeRide,
+  requestCompletion,
   cancelRide,
   getRideDetails,
 } from "../controllers/rideController.js";
@@ -43,11 +44,20 @@ router.get("/rides/:rideId", authenticate("driver"), getRideDetails);
 router.put("/rides/:rideId/accept", authenticate("driver"), acceptRide);
 router.put("/rides/:rideId/start", authenticate("driver"), startRide);
 router.put("/rides/:rideId/complete", authenticate("driver"), completeRide);
+router.put(
+  "/rides/:rideId/request-completion",
+  authenticate("driver"),
+  requestCompletion
+);
 router.put("/rides/:rideId/cancel", authenticate("driver"), cancelRide);
 
 // WALLET ROUTES (Protected)
 router.get("/wallet", authenticate("driver"), getWalletBalance);
-router.get("/wallet/transactions", authenticate("driver"), getTransactionHistory);
+router.get(
+  "/wallet/transactions",
+  authenticate("driver"),
+  getTransactionHistory
+);
 router.post("/wallet/withdraw", authenticate("driver"), withdrawFromWallet);
 
 router.get("/stats", authenticate("driver"), getDriverStats);
