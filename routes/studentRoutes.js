@@ -7,6 +7,8 @@ import {
   updateStudentProfile,
   logout,
   getStudentStats,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/studentController.js";
 import {
   bookRide,
@@ -36,7 +38,12 @@ router.post("/verify-email", verifyStudentEmail);
 router.post("/resend-otp", resendVerificationOTP);
 
 // LOGIN — only if verified
+// LOGIN — only if verified
 router.post("/login", loginStudent);
+
+// PASSWORD RESET
+router.post("/forgot-password", forgotPassword);
+router.put("/reset-password/:token", resetPassword);
 
 // LOGOUT FOR BOTH STUDENT AND DRIVER
 router.post("/logout", logout);

@@ -7,6 +7,8 @@ import {
   updateDriverProfile,
   toggleAvailability,
   getDriverStats,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/driverController.js";
 import {
   getAvailableRides,
@@ -32,6 +34,8 @@ router.post("/register", registerDriver);
 router.post("/verify-email", verifyDriverEmail);
 router.post("/resend-otp", resendDriverOTP);
 router.post("/login", loginDriver);
+router.post("/forgot-password", forgotPassword);
+router.put("/reset-password/:token", resetPassword);
 
 // PROFILE ROUTES (Protected)
 router.put("/profile", authenticate("driver"), updateDriverProfile);

@@ -12,7 +12,7 @@ const studentSchema = new mongoose.Schema(
       type: String,
       required: [true, "Matric number is required"],
       unique: true,
-      trim: true
+      trim: true,
     },
 
     email: {
@@ -45,6 +45,16 @@ const studentSchema = new mongoose.Schema(
     },
 
     otpExpires: {
+      type: Date,
+      default: null,
+    },
+
+    resetPasswordToken: {
+      type: String,
+      default: null,
+    },
+
+    resetPasswordExpire: {
       type: Date,
       default: null,
     },
