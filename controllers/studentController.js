@@ -174,6 +174,7 @@ export async function loginStudent(req, res) {
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token, // Return token for localStorage fallback
       student: {
         id: student._id,
         fullName: student.fullName,
@@ -281,11 +282,7 @@ export async function updateStudentProfile(req, res) {
 }
 
 export const logout = (req, res) => {
-  res.clearCookie("access_token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-  });
+  res.clearCookie("access_token", cookieOptions);
 
   return res.status(200).json({
     success: true,

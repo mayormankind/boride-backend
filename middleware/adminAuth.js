@@ -1,5 +1,7 @@
+// middleware/adminAuth.js
 import { verifyToken } from "../utils/jwts.js";
 import Admin from "../models/admin.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 /**
  * Middleware to authenticate admin users
@@ -7,9 +9,16 @@ import Admin from "../models/admin.js";
  */
 export async function requireAdminAuth(req, res, next) {
   try {
-    const token = req.cookies?.admin_token;
+    // 1. Read token from cookie (primary)
+    let token = req.cookies?.admin_token;
+
+    // 2. Read token from header (fallback)
+    if (!token && req.headers.authorization?.startsWith("Bearer ")) {
+      token = req.headers.authorization.split(" ")[1];
+    }
 
     if (!token) {
+      res.clearCookie("admin_token", cookieOptions);
       return res.status(401).json({
         success: false,
         message: "Not authenticated. Admin access required.",
@@ -19,6 +28,7 @@ export async function requireAdminAuth(req, res, next) {
     const decoded = verifyToken(token);
 
     if (!decoded || decoded.role !== "admin") {
+      res.clearCookie("admin_token", cookieOptions);
       return res.status(401).json({
         success: false,
         message: "Invalid or expired admin token",
@@ -28,13 +38,15 @@ export async function requireAdminAuth(req, res, next) {
     const admin = await Admin.findById(decoded.id).select("-password");
 
     if (!admin) {
-      return res.status(404).json({
+      res.clearCookie("admin_token", cookieOptions);
+      return res.status(401).json({
         success: false,
         message: "Admin not found",
       });
     }
 
     if (!admin.isActive) {
+      res.clearCookie("admin_token", cookieOptions);
       return res.status(403).json({
         success: false,
         message: "Admin account is deactivated",
@@ -47,6 +59,7 @@ export async function requireAdminAuth(req, res, next) {
     next();
   } catch (error) {
     console.error("Admin authentication error:", error);
+    res.clearCookie("admin_token", cookieOptions);
     return res.status(500).json({
       success: false,
       message: "Authentication error",

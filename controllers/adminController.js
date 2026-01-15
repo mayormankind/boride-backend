@@ -1,3 +1,4 @@
+// controllers/adminController.js
 import bcrypt from "bcryptjs";
 import Admin from "../models/admin.js";
 import Student from "../models/student.js";
@@ -5,6 +6,7 @@ import Driver from "../models/driver.js";
 import Ride from "../models/ride.js";
 import Wallet from "../models/wallet.js";
 import { signToken } from "../utils/jwts.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 /**
  * POST /api/admin/auth/login
@@ -58,16 +60,12 @@ export async function adminLogin(req, res) {
     });
 
     // Set HTTP-only cookie
-    res.cookie("admin_token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
-    });
+    res.cookie("admin_token", token, cookieOptions);
 
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token, // Return token for localStorage fallback
       data: {
         id: admin._id,
         fullName: admin.fullName,
@@ -117,11 +115,7 @@ export async function getAdminMe(req, res) {
  */
 export async function adminLogout(req, res) {
   try {
-    res.clearCookie("admin_token", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    });
+    res.clearCookie("admin_token", cookieOptions);
 
     return res.status(200).json({
       success: true,

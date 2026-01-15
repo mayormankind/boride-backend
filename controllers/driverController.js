@@ -229,6 +229,7 @@ export const loginDriver = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Login successful",
+      token, // Return token for localStorage fallback
       driver: {
         id: driver._id,
         fullName: driver.fullName,
@@ -444,3 +445,13 @@ export async function resetPassword(req, res) {
     });
   }
 }
+
+// LOGOUT
+export const logout = (req, res) => {
+  res.clearCookie("access_token", cookieOptions);
+
+  return res.status(200).json({
+    success: true,
+    message: "Logged out successfully",
+  });
+};

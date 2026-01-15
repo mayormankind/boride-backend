@@ -9,6 +9,7 @@ import {
   getDriverStats,
   forgotPassword,
   resetPassword,
+  logout,
 } from "../controllers/driverController.js";
 import {
   getAvailableRides,
@@ -36,6 +37,7 @@ router.post("/resend-otp", resendDriverOTP);
 router.post("/login", loginDriver);
 router.post("/forgot-password", forgotPassword);
 router.put("/reset-password/:token", resetPassword);
+router.post("/logout", logout);
 
 // PROFILE ROUTES (Protected)
 router.put("/profile", authenticate("driver"), updateDriverProfile);
