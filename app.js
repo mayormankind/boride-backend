@@ -18,6 +18,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
   "https://boride-ruby.vercel.app",
+  "https://boride-admin.vercel.app",
 ];
 
 // started the express app
