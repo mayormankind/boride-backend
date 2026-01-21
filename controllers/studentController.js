@@ -10,7 +10,7 @@ import {
 } from "../utils/mailer.js";
 import crypto from "crypto";
 import Wallet from "../models/wallet.js";
-import { cookieOptions } from "../utils/cookieOptions.js";
+
 import Ride from "../models/ride.js";
 
 export async function registerStudent(req, res) {
@@ -168,9 +168,6 @@ export async function loginStudent(req, res) {
       role: "student",
     });
 
-    // 🔐 SET COOKIE
-    res.cookie("access_token", token, cookieOptions);
-
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -282,8 +279,6 @@ export async function updateStudentProfile(req, res) {
 }
 
 export const logout = (req, res) => {
-  res.clearCookie("access_token", cookieOptions);
-
   return res.status(200).json({
     success: true,
     message: "Logged out successfully",
@@ -295,9 +290,8 @@ export async function getStudentStats(req, res) {
     const studentId = req.user._id;
 
     // Basic student info (future-proofing)
-    const student = await Student.findById(studentId).select(
-      "fullName matricNo"
-    );
+    const student =
+      await Student.findById(studentId).select("fullName matricNo");
 
     // Wallet
     const wallet = await Wallet.findOne({

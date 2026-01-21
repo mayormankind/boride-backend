@@ -9,7 +9,7 @@ import driverRoutes from "./routes/driverRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan";
-import cookieParser from "cookie-parser";
+
 import { authMe } from "./controllers/authMe.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -29,14 +29,13 @@ app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
 // middleware
-app.use(cookieParser());
+
 app.use(express.json());
 app.use(morgan("dev"));
 app.use(
   cors({
     origin: allowedOrigins,
-    credentials: true,
-  })
+  }),
 );
 app.use(helmet());
 

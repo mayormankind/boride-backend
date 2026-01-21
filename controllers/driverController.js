@@ -10,7 +10,7 @@ import {
 import crypto from "crypto";
 import { isValidEmail } from "../utils/validator.js";
 import Wallet from "../models/wallet.js";
-import { cookieOptions } from "../utils/cookieOptions.js";
+
 import Ride from "../models/ride.js";
 
 // REGISTER DRIVER
@@ -223,9 +223,6 @@ export const loginDriver = async (req, res) => {
       role: "driver",
     });
 
-    // SET COOKIE
-    res.cookie("access_token", token, cookieOptions);
-
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -311,7 +308,7 @@ export async function getDriverStats(req, res) {
     const driverId = req.user._id;
 
     const driver = await Driver.findById(driverId).select(
-      "fullName rating totalRides isAvailable"
+      "fullName rating totalRides isAvailable",
     );
 
     const wallet = await Wallet.findOne({
@@ -448,8 +445,6 @@ export async function resetPassword(req, res) {
 
 // LOGOUT
 export const logout = (req, res) => {
-  res.clearCookie("access_token", cookieOptions);
-
   return res.status(200).json({
     success: true,
     message: "Logged out successfully",

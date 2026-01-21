@@ -6,7 +6,6 @@ import Driver from "../models/driver.js";
 import Ride from "../models/ride.js";
 import Wallet from "../models/wallet.js";
 import { signToken } from "../utils/jwts.js";
-import { cookieOptions } from "../utils/cookieOptions.js";
 
 /**
  * POST /api/admin/auth/login
@@ -58,9 +57,6 @@ export async function adminLogin(req, res) {
       email: admin.email,
       role: "admin",
     });
-
-    // Set HTTP-only cookie
-    res.cookie("admin_token", token, cookieOptions);
 
     return res.status(200).json({
       success: true,
@@ -115,8 +111,6 @@ export async function getAdminMe(req, res) {
  */
 export async function adminLogout(req, res) {
   try {
-    res.clearCookie("admin_token", cookieOptions);
-
     return res.status(200).json({
       success: true,
       message: "Logout successful",
@@ -177,7 +171,7 @@ export async function getStudents(req, res) {
     const [students, total] = await Promise.all([
       Student.find()
         .select(
-          "-password -emailOTP -otpExpires -resetPasswordToken -resetPasswordExpire"
+          "-password -emailOTP -otpExpires -resetPasswordToken -resetPasswordExpire",
         )
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -194,7 +188,7 @@ export async function getStudents(req, res) {
     }).lean();
 
     const walletMap = new Map(
-      wallets.map((w) => [w.user.toString(), w.balance])
+      wallets.map((w) => [w.user.toString(), w.balance]),
     );
 
     const studentsWithBalance = students.map((student) => ({
@@ -242,7 +236,7 @@ export async function updateStudentStatus(req, res) {
     const student = await Student.findByIdAndUpdate(
       id,
       { isVerified },
-      { new: true, select: "-password" }
+      { new: true, select: "-password" },
     );
 
     if (!student) {
@@ -279,7 +273,7 @@ export async function getDrivers(req, res) {
     const [drivers, total] = await Promise.all([
       Driver.find()
         .select(
-          "-password -emailOTP -otpExpires -resetPasswordToken -resetPasswordExpire"
+          "-password -emailOTP -otpExpires -resetPasswordToken -resetPasswordExpire",
         )
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -328,7 +322,7 @@ export async function updateDriverStatus(req, res) {
     const driver = await Driver.findByIdAndUpdate(
       id,
       { isVerified },
-      { new: true, select: "-password" }
+      { new: true, select: "-password" },
     );
 
     if (!driver) {
