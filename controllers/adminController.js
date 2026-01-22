@@ -27,7 +27,7 @@ export async function adminLogin(req, res) {
     if (!admin) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid email or password",
       });
     }
 
@@ -43,7 +43,7 @@ export async function adminLogin(req, res) {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: "Invalid credentials",
+        message: "Invalid email or password",
       });
     }
 
