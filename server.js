@@ -19,7 +19,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const allowedOrigins = [
   "http://localhost:3000",
-  "http://localhost:3001",
   "https://boride-ruby.vercel.app",
   "https://boride-admin.vercel.app",
 ];
@@ -39,6 +38,7 @@ app.use(morgan("dev"));
 app.use(
   cors({
     origin: allowedOrigins,
+    credentials: true,
   }),
 );
 app.use(helmet());

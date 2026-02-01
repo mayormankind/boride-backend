@@ -23,6 +23,23 @@ export async function bookRide(req, res) {
       estimatedDuration,
     } = req.body;
 
+    // 1️⃣ Enforce "One Active Ride Per Student"
+    const activeRide = await Ride.findOne({
+      student: studentId,
+      status: {
+        $in: ["pending", "accepted", "ongoing", "completion_requested"],
+      },
+    });
+
+    if (activeRide) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "You already have an active ride. Complete or cancel it before booking another.",
+        activeRide: serializeRide(activeRide),
+      });
+    }
+
     // Validate required fields
     if (!pickupLocation || !dropoffLocation || !fare || !paymentMethod) {
       return res.status(400).json({
@@ -79,14 +96,14 @@ export async function bookRide(req, res) {
     const student = await Student.findById(studentId);
 
     // Send booking confirmation email
-    // await sendRideBookedEmail(student.email, {
-    //   studentName: student.fullName,
-    //   rideId: ride._id.toString().slice(-8).toUpperCase(),
-    //   pickupLocation: pickupLocation.address,
-    //   dropoffLocation: dropoffLocation.address,
-    //   fare: fare.toFixed(2),
-    //   paymentMethod,
-    // });
+    await sendRideBookedEmail(student.email, {
+      studentName: student.fullName,
+      rideId: ride._id.toString().slice(-8).toUpperCase(),
+      pickupLocation: pickupLocation.address,
+      dropoffLocation: dropoffLocation.address,
+      fare: fare.toFixed(2),
+      paymentMethod,
+    });
 
     return res.status(201).json({
       success: true,
@@ -200,15 +217,15 @@ export async function acceptRide(req, res) {
     await ride.save();
 
     // Send email notification to student
-    // await sendRideAcceptedEmail(ride.student.email, {
-    //   studentName: ride.student.fullName,
-    //   rideId: ride._id.toString().slice(-8).toUpperCase(),
-    //   pickupLocation: ride.pickupLocation.address,
-    //   driverName: driver.fullName,
-    //   driverPhone: driver.phoneNo,
-    //   vehicleInfo: `${driver.vehicleInfo?.color || ""} ${driver.vehicleInfo?.make || ""} ${driver.vehicleInfo?.model || ""}`.trim() || "Not specified",
-    //   estimatedArrival: estimatedArrival || 5,
-    // });
+    await sendRideAcceptedEmail(ride.student.email, {
+      studentName: ride.student.fullName,
+      rideId: ride._id.toString().slice(-8).toUpperCase(),
+      pickupLocation: ride.pickupLocation.address,
+      driverName: driver.fullName,
+      driverPhone: driver.phoneNo,
+      vehicleInfo: `${driver.vehicleInfo?.color || ""} ${driver.vehicleInfo?.make || ""} ${driver.vehicleInfo?.model || ""}`.trim() || "Not specified",
+      estimatedArrival: estimatedArrival || 5,
+    });
 
     return res.status(200).json({
       success: true,
@@ -414,15 +431,15 @@ export async function completeRide(req, res) {
     });
 
     // Send completion email to student
-    // await sendRideCompletedEmail(ride.student.email, {
-    //   studentName: ride.student.fullName,
-    //   rideId: ride._id.toString().slice(-8).toUpperCase(),
-    //   driverName: driver.fullName,
-    //   duration: actualDuration || ride.estimatedDuration || 0,
-    //   totalFare: ride.fare.toFixed(2),
-    //   paymentMethod: ride.paymentMethod,
-    //   walletBalance: updatedWallet?.balance.toFixed(2) || "0.00",
-    // });
+    await sendRideCompletedEmail(ride.student.email, {
+      studentName: ride.student.fullName,
+      rideId: ride._id.toString().slice(-8).toUpperCase(),
+      driverName: driver.fullName,
+      duration: actualDuration || ride.estimatedDuration || 0,
+      totalFare: ride.fare.toFixed(2),
+      paymentMethod: ride.paymentMethod,
+      walletBalance: updatedWallet?.balance.toFixed(2) || "0.00",
+    });
 
     return res.status(200).json({
       success: true,
@@ -476,15 +493,16 @@ export async function cancelRide(req, res) {
       });
     }
 
-    // Can't cancel completed rides
-    if (ride.status === "completed") {
+    // Can't cancel completed or ongoing rides
+    if (ride.status === "completed" || ride.status === "ongoing") {
       return res.status(400).json({
         success: false,
-        message: "Cannot cancel completed ride",
+        message: `Cannot cancel ${ride.status} ride`,
       });
     }
 
     ride.status = "cancelled";
+    ride.cancelledAt = new Date();
     ride.cancelledBy = userType;
     ride.cancellationReason = reason || "No reason provided";
     ride.timeline.push({
@@ -559,7 +577,7 @@ export async function rateRide(req, res) {
 
     const totalRating = driverRides.reduce(
       (sum, r) => sum + (r.rating || 0),
-      0
+      0,
     );
     const avgRating = totalRating / driverRides.length;
 

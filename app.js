@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import studentRoutes from "./routes/studentRoutes.js";
 import driverRoutes from "./routes/driverRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
+import internalRoutes from "./routes/internalRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan";
 
@@ -16,7 +17,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const allowedOrigins = [
   "http://localhost:3000",
-  "http://localhost:3001",
   "https://boride-ruby.vercel.app",
   "https://boride-admin.vercel.app",
 ];
@@ -35,6 +35,7 @@ app.use(morgan("dev"));
 app.use(
   cors({
     origin: allowedOrigins,
+    credentials: true,
   }),
 );
 app.use(helmet());
@@ -45,6 +46,7 @@ connectDB();
 app.use("/api/student", studentRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/internal", internalRoutes);
 app.get("/api/auth/me", authMe);
 
 // Health check endpoint

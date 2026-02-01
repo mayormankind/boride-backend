@@ -114,6 +114,10 @@ const rideSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    cancelledAt: {
+      type: Date,
+      default: null,
+    },
     // Immutable ride lifecycle timeline - append only
     timeline: [
       {
@@ -142,7 +146,7 @@ const rideSchema = new mongoose.Schema(
       },
     ],
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 // Index for efficient queries
