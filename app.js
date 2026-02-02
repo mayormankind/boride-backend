@@ -7,7 +7,6 @@ import { fileURLToPath } from "url";
 import studentRoutes from "./routes/studentRoutes.js";
 import driverRoutes from "./routes/driverRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import internalRoutes from "./routes/internalRoutes.js";
 import { connectDB } from "./db/conn.js";
 import morgan from "morgan";
 
@@ -46,7 +45,6 @@ connectDB();
 app.use("/api/student", studentRoutes);
 app.use("/api/driver", driverRoutes);
 app.use("/api/admin", adminRoutes);
-app.use("/api/internal", internalRoutes);
 app.get("/api/auth/me", authMe);
 
 // Health check endpoint

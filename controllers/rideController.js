@@ -126,6 +126,59 @@ export async function getStudentRides(req, res) {
     const studentId = req.user._id;
     const { status } = req.query;
 
+    // HEAL-ON-READ: Auto-expire stale rides for this student
+    const now = new Date();
+    const pendingCutoff = new Date(now.getTime() - 15 * 60 * 1000); // 15 mins
+    const acceptedCutoff = new Date(now.getTime() - 30 * 60 * 1000); // 30 mins
+
+    // 1. Expire stale PENDING rides
+    await Ride.updateMany(
+      {
+        student: studentId,
+        status: "pending",
+        createdAt: { $lt: pendingCutoff },
+      },
+      {
+        $set: {
+          status: "cancelled",
+          cancelledBy: "system",
+          cancellationReason: "No driver accepted within 15 minutes",
+          cancelledAt: now,
+        },
+        $push: {
+          timeline: {
+            type: "cancelled",
+            message: "System auto-cancelled: No driver accepted in time",
+            timestamp: now,
+          },
+        },
+      },
+    );
+
+    // 2. Expire stale ACCEPTED rides
+    await Ride.updateMany(
+      {
+        student: studentId,
+        status: "accepted",
+        updatedAt: { $lt: acceptedCutoff }, 
+      },
+      {
+        $set: {
+          status: "cancelled",
+          cancelledBy: "system",
+          cancellationReason: "Driver did not start ride in time",
+          cancelledAt: now,
+        },
+        $push: {
+          timeline: {
+            type: "cancelled",
+            message: "System auto-cancelled: Driver did not start ride in time",
+            timestamp: now,
+          },
+        },
+      },
+    );
+
     const query = { student: studentId };
     if (status) {
       query.status = status;
@@ -139,7 +192,6 @@ export async function getStudentRides(req, res) {
       success: true,
       count: rides.length,
       rides,
-      // data: rides.map(serializeRide),
     });
   } catch (error) {
     return res.status(500).json({
@@ -153,6 +205,32 @@ export async function getStudentRides(req, res) {
 // GET AVAILABLE RIDES FOR DRIVER
 export async function getAvailableRides(req, res) {
   try {
+    // HEAL-ON-READ: Auto-expire ALL stale pending rides before showing list
+    const now = new Date();
+    const pendingCutoff = new Date(now.getTime() - 15 * 60 * 1000);
+
+    await Ride.updateMany(
+      {
+        status: "pending",
+        createdAt: { $lt: pendingCutoff },
+      },
+      {
+        $set: {
+          status: "cancelled",
+          cancelledBy: "system",
+          cancellationReason: "No driver accepted within 15 minutes",
+          cancelledAt: now,
+        },
+        $push: {
+          timeline: {
+            type: "cancelled",
+            message: "System auto-cancelled: No driver accepted in time",
+            timestamp: now,
+          },
+        },
+      },
+    );
+
     // Get pending rides
     const rides = await Ride.find({ status: "pending" })
       .populate("student", "fullName phoneNo")
@@ -223,7 +301,9 @@ export async function acceptRide(req, res) {
       pickupLocation: ride.pickupLocation.address,
       driverName: driver.fullName,
       driverPhone: driver.phoneNo,
-      vehicleInfo: `${driver.vehicleInfo?.color || ""} ${driver.vehicleInfo?.make || ""} ${driver.vehicleInfo?.model || ""}`.trim() || "Not specified",
+      vehicleInfo:
+        `${driver.vehicleInfo?.color || ""} ${driver.vehicleInfo?.make || ""} ${driver.vehicleInfo?.model || ""}`.trim() ||
+        "Not specified",
       estimatedArrival: estimatedArrival || 5,
     });
 
@@ -606,7 +686,7 @@ export async function getRideDetails(req, res) {
     const userType = req.userType;
     const { rideId } = req.params;
 
-    const ride = await Ride.findById(rideId)
+    let ride = await Ride.findById(rideId)
       .populate("student", "fullName email phoneNo matricNo")
       .populate("driver", "fullName email phoneNo vehicleInfo rating");
 
@@ -615,6 +695,47 @@ export async function getRideDetails(req, res) {
         success: false,
         message: "Ride not found",
       });
+    }
+
+    // HEAL-ON-READ: Check if THIS ride is stale
+    const now = new Date();
+    let updated = false;
+
+    // Check Pending Timeout (15m)
+    if (
+      ride.status === "pending" &&
+      now.getTime() - new Date(ride.createdAt).getTime() > 15 * 60 * 1000
+    ) {
+      ride.status = "cancelled";
+      ride.cancelledBy = "system";
+      ride.cancellationReason = "No driver accepted within 15 minutes";
+      ride.cancelledAt = now;
+      ride.timeline.push({
+        type: "cancelled",
+        message: "System auto-cancelled: No driver accepted in time",
+        timestamp: now,
+      });
+      updated = true;
+    }
+    // Check Accepted Timeout (30m)
+    else if (
+      ride.status === "accepted" &&
+      now.getTime() - new Date(ride.updatedAt).getTime() > 30 * 60 * 1000
+    ) {
+      ride.status = "cancelled";
+      ride.cancelledBy = "system";
+      ride.cancellationReason = "Driver did not start ride in time";
+      ride.cancelledAt = now;
+      ride.timeline.push({
+        type: "cancelled",
+        message: "System auto-cancelled: Driver did not start ride in time",
+        timestamp: now,
+      });
+      updated = true;
+    }
+
+    if (updated) {
+      await ride.save();
     }
 
     // Verify user has access to this ride
