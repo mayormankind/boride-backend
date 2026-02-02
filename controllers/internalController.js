@@ -52,7 +52,7 @@ export async function cleanupRides(req, res) {
       },
     );
 
-    // 3. Find and Cancel Stale ACCEPTED rides (Accepted but not started)
+    // 3. Find and Cancel Stale ACCEPTED rides (Accepted but not started by the driver)
     // We assume if it's accepted > 30 mins ago and NOT started (no startTime), it's stale.
     const staleAccepted = await Ride.updateMany(
       {
