@@ -62,7 +62,7 @@ export async function registerStudent(req, res) {
     await Wallet.create({
       user: student._id,
       userType: "Student",
-      balance: 0,
+      balance: 10000,
     });
 
     // Send OTP email using EJS template
