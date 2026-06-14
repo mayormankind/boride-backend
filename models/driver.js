@@ -26,6 +26,10 @@ const driverSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
     emailOTP: {
       type: String,
       default: null,

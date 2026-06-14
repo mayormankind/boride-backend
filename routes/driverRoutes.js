@@ -10,6 +10,8 @@ import {
   forgotPassword,
   resetPassword,
   logout,
+  changePassword,
+  getDriverEarnings,
 } from "../controllers/driverController.js";
 import {
   getAvailableRides,
@@ -67,5 +69,7 @@ router.get(
 router.post("/wallet/withdraw", authenticate("driver"), withdrawFromWallet);
 
 router.get("/stats", authenticate("driver"), getDriverStats);
+router.get("/earnings", authenticate("driver"), getDriverEarnings);
+router.put("/change-password", authenticate("driver"), changePassword);
 
 export default router;

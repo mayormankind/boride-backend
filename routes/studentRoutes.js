@@ -9,6 +9,7 @@ import {
   getStudentStats,
   forgotPassword,
   resetPassword,
+  changePassword,
 } from "../controllers/studentController.js";
 import {
   bookRide,
@@ -80,5 +81,6 @@ router.get(
 router.post("/wallet/fund", authenticate("student"), fundWallet);
 
 router.get("/stats", authenticate("student"), getStudentStats);
+router.put("/change-password", authenticate("student"), changePassword);
 
 export default router;

@@ -10,6 +10,8 @@ import {
   getDrivers,
   updateDriverStatus,
   getRides,
+  getRideDetail,
+  resolveDispute,
 } from "../controllers/adminController.js";
 import { requireAdminAuth } from "../middleware/adminAuth.js";
 
@@ -36,5 +38,7 @@ router.patch("/drivers/:id/status", requireAdminAuth, updateDriverStatus);
 
 // Rides Monitoring
 router.get("/rides", requireAdminAuth, getRides);
+router.get("/rides/:id", requireAdminAuth, getRideDetail);
+router.patch("/rides/:id/resolve", requireAdminAuth, resolveDispute);
 
 export default router;

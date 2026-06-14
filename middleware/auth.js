@@ -47,6 +47,13 @@ export function authenticate(userType) {
         });
       }
 
+      if (user.isSuspended) {
+        return res.status(403).json({
+          success: false,
+          message: "Account suspended. Contact support.",
+        });
+      }
+
       req.user = user;
       req.userType = userType;
 

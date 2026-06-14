@@ -103,7 +103,7 @@ const rideSchema = new mongoose.Schema(
     },
     cancelledBy: {
       type: String,
-      enum: ["student", "driver", null],
+      enum: ["student", "driver", "system", null],
       default: null,
     },
     cancellationReason: {

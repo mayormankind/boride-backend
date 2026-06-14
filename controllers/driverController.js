@@ -443,6 +443,89 @@ export async function resetPassword(req, res) {
   }
 }
 
+// CHANGE PASSWORD (authenticated)
+export async function changePassword(req, res) {
+  try {
+    const driverId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
+    const driver = await Driver.findById(driverId);
+    const isMatch = await bcrypt.compare(currentPassword, driver.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    driver.password = await bcrypt.hash(newPassword, 10);
+    await driver.save();
+
+    return res.status(200).json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+}
+
+// GET DRIVER EARNINGS (daily/weekly/monthly/total breakdowns)
+export async function getDriverEarnings(req, res) {
+  try {
+    const driverId = req.user._id;
+
+    const wallet = await Wallet.findOne({ user: driverId, userType: "Driver" });
+
+    if (!wallet) {
+      return res.status(404).json({ success: false, message: "Wallet not found" });
+    }
+
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const creditTxns = wallet.transactions.filter((t) => t.type === "credit");
+
+    const sumIn = (txns, from) =>
+      txns
+        .filter((t) => new Date(t.timestamp) >= from)
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const totalEarnings = creditTxns.reduce((sum, t) => sum + t.amount, 0);
+    const dailyEarnings = sumIn(creditTxns, startOfDay);
+    const weeklyEarnings = sumIn(creditTxns, startOfWeek);
+    const monthlyEarnings = sumIn(creditTxns, startOfMonth);
+
+    const driver = await Driver.findById(driverId).select("totalRides rating");
+    const cancelledTrips = await Ride.countDocuments({ driver: driverId, status: "cancelled" });
+    const completedTrips = await Ride.countDocuments({ driver: driverId, status: "completed" });
+
+    return res.status(200).json({
+      success: true,
+      earnings: {
+        dailyEarnings,
+        weeklyEarnings,
+        monthlyEarnings,
+        totalEarnings,
+        completedTrips,
+        cancelledTrips,
+        totalTrips: driver.totalRides || 0,
+        rating: driver.rating || 0,
+        walletBalance: wallet.balance,
+      },
+    });
+  } catch (error) {
+    console.error("Driver Earnings Error:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+
 // LOGOUT
 export const logout = (req, res) => {
   return res.status(200).json({

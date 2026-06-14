@@ -130,7 +130,7 @@ export async function adminLogout(req, res) {
  */
 export async function getDashboardStats(req, res) {
   try {
-    const [totalStudents, totalDrivers, totalRides, activeRides] =
+    const [totalStudents, totalDrivers, totalRides, activeRides, completedRides, cancelledRides] =
       await Promise.all([
         Student.countDocuments(),
         Driver.countDocuments(),
@@ -138,7 +138,13 @@ export async function getDashboardStats(req, res) {
         Ride.countDocuments({
           status: { $in: ["pending", "accepted", "ongoing"] },
         }),
+        Ride.countDocuments({ status: "completed" }),
+        Ride.countDocuments({ status: "cancelled" }),
       ]);
+
+    // Compute total platform revenue from completed wallet-payment rides
+    const completedWalletRides = await Ride.find({ status: "completed", paymentMethod: "Wallet" }).select("fare");
+    const totalRevenue = completedWalletRides.reduce((sum, r) => sum + (r.fare || 0), 0);
 
     return res.status(200).json({
       success: true,
@@ -147,6 +153,9 @@ export async function getDashboardStats(req, res) {
         totalDrivers,
         totalRides,
         activeRides,
+        completedRides,
+        cancelledRides,
+        totalRevenue,
       },
     });
   } catch (error) {
@@ -167,9 +176,19 @@ export async function getStudents(req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const { search } = req.query;
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { matricNo: { $regex: search, $options: "i" } },
+      ];
+    }
 
     const [students, total] = await Promise.all([
-      Student.find()
+      Student.find(filter)
         .select(
           "-password -emailOTP -otpExpires -resetPasswordToken -resetPasswordExpire",
         )
@@ -177,7 +196,7 @@ export async function getStudents(req, res) {
         .skip(skip)
         .limit(limit)
         .lean(),
-      Student.countDocuments(),
+      Student.countDocuments(filter),
     ]);
 
     // Fetch wallet balances for each student
@@ -235,7 +254,7 @@ export async function updateStudentStatus(req, res) {
 
     const student = await Student.findByIdAndUpdate(
       id,
-      { isVerified },
+      { isSuspended: !isVerified },
       { new: true, select: "-password" },
     );
 
@@ -269,9 +288,18 @@ export async function getDrivers(req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const { search } = req.query;
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { fullName: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+      ];
+    }
 
     const [drivers, total] = await Promise.all([
-      Driver.find()
+      Driver.find(filter)
         .select(
           "-password -emailOTP -otpExpires -resetPasswordToken -resetPasswordExpire",
         )
@@ -279,7 +307,7 @@ export async function getDrivers(req, res) {
         .skip(skip)
         .limit(limit)
         .lean(),
-      Driver.countDocuments(),
+      Driver.countDocuments(filter),
     ]);
 
     return res.status(200).json({
@@ -321,7 +349,7 @@ export async function updateDriverStatus(req, res) {
 
     const driver = await Driver.findByIdAndUpdate(
       id,
-      { isVerified },
+      { isSuspended: !isVerified },
       { new: true, select: "-password" },
     );
 
@@ -355,16 +383,20 @@ export async function getRides(req, res) {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
+    const { status, search } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
 
     const [rides, total] = await Promise.all([
-      Ride.find()
+      Ride.find(filter)
         .populate("student", "fullName phoneNo email")
         .populate("driver", "fullName phoneNo vehicleInfo")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
-      Ride.countDocuments(),
+      Ride.countDocuments(filter),
     ]);
 
     return res.status(200).json({
@@ -385,5 +417,91 @@ export async function getRides(req, res) {
       success: false,
       message: "Failed to fetch rides",
     });
+  }
+}
+
+/**
+ * GET /api/admin/rides/:id
+ * Get single ride detail
+ */
+export async function getRideDetail(req, res) {
+  try {
+    const { id } = req.params;
+
+    const ride = await Ride.findById(id)
+      .populate("student", "fullName phoneNo email matricNo")
+      .populate("driver", "fullName phoneNo email vehicleInfo rating totalRides")
+      .lean();
+
+    if (!ride) {
+      return res.status(404).json({ success: false, message: "Ride not found" });
+    }
+
+    return res.status(200).json({ success: true, data: { ride } });
+  } catch (error) {
+    console.error("Get ride detail error:", error);
+    return res.status(500).json({ success: false, message: "Failed to fetch ride" });
+  }
+}
+
+/**
+ * PATCH /api/admin/rides/:id/resolve
+ * Resolve a disputed ride
+ */
+export async function resolveDispute(req, res) {
+  try {
+    const { id } = req.params;
+    const { resolution, releasePaymentTo } = req.body;
+
+    const ride = await Ride.findById(id).populate("student").populate("driver");
+    if (!ride) {
+      return res.status(404).json({ success: false, message: "Ride not found" });
+    }
+
+    if (ride.status !== "disputed") {
+      return res.status(400).json({ success: false, message: "Ride is not disputed" });
+    }
+
+    if (releasePaymentTo === "driver" && ride.paymentMethod === "Wallet") {
+      const studentWallet = await Wallet.findOne({ user: ride.student._id, userType: "Student" });
+      const driverWallet = await Wallet.findOne({ user: ride.driver._id, userType: "Driver" });
+
+      if (studentWallet && studentWallet.balance >= ride.fare) {
+        const before = studentWallet.balance;
+        studentWallet.balance -= ride.fare;
+        studentWallet.transactions.push({
+          type: "debit",
+          amount: ride.fare,
+          description: `Dispute resolved - payment to driver #${ride._id.toString().slice(-8).toUpperCase()}`,
+          balanceBefore: before,
+          balanceAfter: studentWallet.balance,
+        });
+        await studentWallet.save();
+
+        const driverBefore = driverWallet.balance;
+        driverWallet.balance += ride.fare;
+        driverWallet.transactions.push({
+          type: "credit",
+          amount: ride.fare,
+          description: `Dispute resolved - earnings #${ride._id.toString().slice(-8).toUpperCase()}`,
+          balanceBefore: driverBefore,
+          balanceAfter: driverWallet.balance,
+        });
+        await driverWallet.save();
+      }
+    }
+
+    ride.status = "completed";
+    ride.timeline.push({
+      type: "completed",
+      message: `Dispute resolved by admin: ${resolution || "Admin decision"}`,
+      timestamp: new Date(),
+    });
+    await ride.save();
+
+    return res.status(200).json({ success: true, message: "Dispute resolved successfully", data: { ride } });
+  } catch (error) {
+    console.error("Resolve dispute error:", error);
+    return res.status(500).json({ success: false, message: "Failed to resolve dispute" });
   }
 }

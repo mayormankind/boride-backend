@@ -398,6 +398,35 @@ export async function forgotPassword(req, res) {
   }
 }
 
+// CHANGE PASSWORD (authenticated)
+export async function changePassword(req, res) {
+  try {
+    const studentId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
+    }
+
+    const student = await Student.findById(studentId);
+    const isMatch = await bcrypt.compare(currentPassword, student.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: "Current password is incorrect" });
+    }
+
+    student.password = await bcrypt.hash(newPassword, 10);
+    await student.save();
+
+    return res.status(200).json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error", error: error.message });
+  }
+}
+
 // RESET PASSWORD
 export async function resetPassword(req, res) {
   try {

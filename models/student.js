@@ -34,6 +34,11 @@ const studentSchema = new mongoose.Schema(
       default: false,
     },
 
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
+
     emailOTP: {
       type: String,
       default: null,
